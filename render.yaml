@@ -3,8 +3,8 @@ services:
     name: glowtrack-api
     runtime: node
     plan: free
-    buildCommand: pnpm install && pnpm build && pnpm --filter @workspace/db push
-    startCommand: pnpm --filter @workspace/api-server start
+    buildCommand: pnpm install && pnpm --filter @workspace/api-server build && pnpm --filter @workspace/db push
+    startCommand: node artifacts/api-server/dist/index.mjs
     envVars:
       - key: ENABLE_PNPM
         value: true
