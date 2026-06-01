@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: glowtrack-api
+    runtime: node
+    plan: free
+    buildCommand: pnpm install && pnpm build
+    startCommand: pnpm --filter @workspace/api-server start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        placeholder: "PostgreSQL connection string from Supabase"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        placeholder: "Your Vercel frontend URL (e.g., https://glowtrack.vercel.app)"
+    healthCheckPath: /api/healthz
