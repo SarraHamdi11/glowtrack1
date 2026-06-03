@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import api from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 
-const perks = ["Free forever plan", "No credit card needed", "Cancel anytime", "Full feature access"];
+const perks = ["Completely free", "No credit card needed", "Unlimited access", "Full feature access"];
 
 export default function Register() {
   const [name, setName]         = useState("");

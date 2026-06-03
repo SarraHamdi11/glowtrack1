@@ -2,22 +2,24 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "next-themes";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Briefcase, CheckSquare, Activity,
-  BarChart2, User, LogOut, Menu, X, Sun, Moon, Sparkles
+  BarChart2, User, LogOut, Menu, X, Sun, Moon, Sparkles, Plus
 } from "lucide-react";
 
 const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard", grad: "from-violet-500 to-purple-600" },
-  { icon: Briefcase,       label: "Jobs",      href: "/jobs",      grad: "from-blue-500 to-indigo-600" },
-  { icon: CheckSquare,     label: "Tasks",     href: "/tasks",     grad: "from-emerald-500 to-teal-600" },
-  { icon: Activity,        label: "Habits",    href: "/habits",    grad: "from-orange-500 to-amber-500" },
-  { icon: BarChart2,       label: "Analytics", href: "/analytics", grad: "from-pink-500 to-rose-500" },
-  { icon: User,            label: "Profile",   href: "/profile",   grad: "from-purple-500 to-violet-600" },
+  { icon: LayoutDashboard, label: "Overview",   href: "/dashboard", grad: "from-violet-500 to-purple-600" },
+  { icon: Activity,        label: "Habits",     href: "/habits",    grad: "from-orange-500 to-amber-500" },
+  { icon: CheckSquare,     label: "Tasks",      href: "/tasks",     grad: "from-emerald-500 to-teal-600" },
+  { icon: BarChart2,       label: "Analytics",  href: "/analytics", grad: "from-pink-500 to-rose-500" },
+  { icon: Briefcase,       label: "Job Search", href: "/jobs",      grad: "from-blue-500 to-indigo-600" },
+  { icon: User,            label: "Profile",    href: "/profile",   grad: "from-purple-500 to-violet-600" },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [showFabMenu, setShowFabMenu] = useState(false);
   const [location] = useLocation();
   const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
@@ -101,37 +103,69 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </div>
             }
             <div className="min-w-0">
-              <p className="text-sm font-bold truncate">{user?.name}</p>
-              <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+              <p className="text-xs font-bold truncate">{user?.name}</p>
+              <p className="text-[10px] text-muted-foreground truncate">{user?.email}</p>
             </div>
           </div>
         </div>
       </aside>
 
       {/* ── Main ── */}
-      <div className="flex-1 flex flex-col lg:ml-64 min-h-screen">
-        {/* Topbar */}
-        <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border/50 px-4 py-3 flex items-center gap-4">
-          <button className="lg:hidden p-2 rounded-xl hover:bg-muted transition-colors" onClick={() => setOpen(true)}>
+      <main className="flex-1 lg:ml-64 relative min-h-screen">
+        <header className="lg:hidden sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
+              <Sparkles className="w-4 h-4 text-white" />
+            </div>
+            <span className="font-bold text-sm">GlowTrack</span>
+          </div>
+          <button onClick={() => setOpen(true)} className="p-2 rounded-xl bg-muted">
             <Menu className="w-5 h-5" />
           </button>
-          <div className="ml-auto flex items-center gap-3">
-            <span className="text-sm text-muted-foreground hidden sm:block">
-              Hey, <span className="font-bold text-foreground">{user?.name?.split(" ")[0]}</span> 👋
-            </span>
-            {user?.avatar
-              ? <img src={user.avatar} className="w-8 h-8 rounded-xl object-cover" alt="" />
-              : <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-pink-500 flex items-center justify-center text-white text-xs font-extrabold shadow-md">
-                  {user?.name?.[0]?.toUpperCase()}
-                </div>
-            }
-          </div>
         </header>
 
-        <main className="flex-1 p-4 sm:p-6 bg-gradient-to-br from-background via-background to-violet-50/30 dark:to-violet-950/10">
+        <div className="p-4 lg:p-8 max-w-6xl mx-auto">
           {children}
-        </main>
-      </div>
+        </div>
+
+        {/* Floating Action Button (FAB) */}
+        <div className="fixed bottom-6 right-6 z-40">
+          <AnimatePresence>
+            {showFabMenu && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.5, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.5, y: 20 }}
+                className="absolute bottom-16 right-0 space-y-2"
+              >
+                <Link href="/habits">
+                  <button className="flex items-center gap-3 px-4 py-3 rounded-2xl glass text-sm font-bold whitespace-nowrap hover:scale-105 transition-all">
+                    <Activity className="w-4 h-4 text-orange-500" /> New Habit
+                  </button>
+                </Link>
+                <Link href="/tasks">
+                  <button className="flex items-center gap-3 px-4 py-3 rounded-2xl glass text-sm font-bold whitespace-nowrap hover:scale-105 transition-all">
+                    <CheckSquare className="w-4 h-4 text-emerald-500" /> New Task
+                  </button>
+                </Link>
+                <Link href="/jobs">
+                  <button className="flex items-center gap-3 px-4 py-3 rounded-2xl glass text-sm font-bold whitespace-nowrap hover:scale-105 transition-all">
+                    <Briefcase className="w-4 h-4 text-blue-500" /> New Job
+                  </button>
+                </Link>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          
+          <button
+            onClick={() => setShowFabMenu(!showFabMenu)}
+            className={`w-14 h-14 rounded-2xl shadow-2xl flex items-center justify-center text-white transition-all duration-300 hover:scale-110 active:scale-95 ${showFabMenu ? 'rotate-45 bg-destructive' : 'bg-primary'}`}
+            style={!showFabMenu ? { background: "linear-gradient(135deg, #6366f1, #3b82f6)" } : undefined}
+          >
+            <Plus className="w-7 h-7" />
+          </button>
+        </div>
+      </main>
     </div>
   );
 }

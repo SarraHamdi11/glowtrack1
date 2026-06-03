@@ -22,12 +22,6 @@ const testimonials = [
   { name: "Priya M.",  role: "Bootcamp Graduate",   quote: "The analytics dashboard showed me exactly when I was most productive. Game changer.", avatar: "PM", grad: "from-blue-400 to-cyan-600" },
 ];
 
-const plans = [
-  { name: "Free",  price: "£0",  period: "forever", features: ["50 job applications", "10 habits", "Basic analytics", "Task manager"],                                              cta: "Get started",    primary: false },
-  { name: "Pro",   price: "£9",  period: "/ month",  features: ["Unlimited applications", "Unlimited habits", "Advanced analytics", "CV upload", "Priority support"],               cta: "Start free trial", primary: true },
-  { name: "Team",  price: "£29", period: "/ month",  features: ["Everything in Pro", "5 team members", "Shared dashboards", "Admin controls", "Dedicated support"],                 cta: "Contact sales",  primary: false },
-];
-
 export default function Home() {
   const { theme, setTheme } = useTheme();
 
@@ -46,7 +40,6 @@ export default function Home() {
           <div className="hidden md:flex items-center gap-6 text-sm font-medium text-muted-foreground">
             <a href="#features" className="hover:text-foreground transition-colors">Features</a>
             <a href="#how"      className="hover:text-foreground transition-colors">How it works</a>
-            <a href="#pricing"  className="hover:text-foreground transition-colors">Pricing</a>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
@@ -194,45 +187,6 @@ export default function Home() {
                     <p className="text-xs text-muted-foreground">{t.role}</p>
                   </div>
                 </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Pricing ── */}
-      <section id="pricing" className="py-24">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
-            <h2 className="text-4xl font-extrabold mb-3">Simple, honest pricing</h2>
-            <p className="text-muted-foreground text-lg">Start free, upgrade when you're ready</p>
-          </motion.div>
-          <div className="grid sm:grid-cols-3 gap-6 items-center">
-            {plans.map((p, i) => (
-              <motion.div key={p.name} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-                className={`rounded-3xl p-7 border transition-all duration-300 ${p.primary
-                  ? "bg-gradient-to-br from-violet-600 via-purple-600 to-pink-500 text-white border-transparent shadow-[0_20px_60px_rgba(139,92,246,0.4)] scale-105"
-                  : "bg-card border-border hover:border-violet-300 hover:shadow-xl hover:shadow-violet-500/10 hover:-translate-y-1"
-                }`}>
-                {p.primary && <div className="inline-flex items-center gap-1 bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full mb-4"><Zap className="w-3 h-3" /> Most popular</div>}
-                <h3 className={`font-extrabold text-xl mb-1 ${p.primary ? "text-white" : ""}`}>{p.name}</h3>
-                <div className="flex items-baseline gap-1 mb-5">
-                  <span className="text-4xl font-extrabold">{p.price}</span>
-                  <span className={`text-sm ${p.primary ? "text-white/70" : "text-muted-foreground"}`}>{p.period}</span>
-                </div>
-                <ul className="space-y-2.5 mb-7">
-                  {p.features.map(f => (
-                    <li key={f} className={`flex items-center gap-2.5 text-sm ${p.primary ? "text-white/90" : "text-muted-foreground"}`}>
-                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${p.primary ? "bg-white/20 text-white" : "bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400"}`}>✓</span>
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/register" className={`block text-center py-3 rounded-2xl font-bold text-sm transition-all ${p.primary
-                  ? "bg-white text-violet-600 hover:bg-white/90 shadow-lg"
-                  : "bg-gradient-to-r from-violet-600 to-pink-500 text-white hover:shadow-lg hover:shadow-violet-500/30"}`}>
-                  {p.cta}
-                </Link>
               </motion.div>
             ))}
           </div>

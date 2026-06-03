@@ -1,25 +1,31 @@
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
-import { Briefcase, CheckSquare, Flame, TrendingUp, Clock, ArrowRight } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import { Briefcase, CheckSquare, Flame, TrendingUp, Clock, ArrowRight, Activity, Calendar, Sparkles } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
+import { motion } from "framer-motion";
 import DashboardCard from "@/components/DashboardCard";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import api from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 
-const STATUS_COLORS: Record<string, string> = {
-  Applied: "#8B5CF6", Interview: "#F59E0B", Offer: "#10B981", Rejected: "#EF4444",
-};
-
 export default function Dashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState<any>(null);
   const [activity, setActivity] = useState<any>(null);
+  const [habits, setHabits] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([api.get("/dashboard/stats"), api.get("/dashboard/activity")])
-      .then(([s, a]) => { setStats(s.data); setActivity(a.data); })
+    Promise.all([
+      api.get("/dashboard/stats"),
+      api.get("/dashboard/activity"),
+      api.get("/habits")
+    ])
+      .then(([s, a, h]) => {
+        setStats(s.data);
+        setActivity(a.data);
+        setHabits(h.data);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -31,155 +37,169 @@ export default function Dashboard() {
     </DashboardLayout>
   );
 
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+
+  const item = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 }
+  };
+
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <motion.div
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="space-y-8"
+      >
         {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold">Good {getGreeting()}, {user?.name?.split(" ")[0]} 👋</h1>
-          <p className="text-muted-foreground text-sm mt-1">Here's what's happening with your career journey</p>
-        </div>
-
-        {/* Stat cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <DashboardCard title="Total Applications" value={stats?.totalJobs ?? 0}   icon={Briefcase}    color="purple" subtitle="job applications" gradient="linear-gradient(135deg, #6366f1, #3b82f6)" />
-          <DashboardCard title="Interviews"          value={stats?.interviews ?? 0}  icon={TrendingUp}   color="pink"   subtitle="in progress" gradient="linear-gradient(135deg, #6366f1, #3b82f6)" />
-          <DashboardCard title="Tasks Completed"     value={stats?.tasksCompleted ?? 0} icon={CheckSquare} color="blue" subtitle="all time" gradient="linear-gradient(135deg, #6366f1, #3b82f6)" />
-          <DashboardCard title="Habit Streak"        value={`${stats?.habitStreak ?? 0}🔥`} icon={Flame} color="orange" subtitle="day streak" gradient="linear-gradient(135deg, #6366f1, #3b82f6)" />
-        </div>
-
-        {/* Charts */}
-        <div className="grid lg:grid-cols-2 gap-6">
-          {/* Line chart */}
-          <div className="bg-card border border-border rounded-2xl p-5">
-            <h2 className="font-semibold mb-4">Applications over time</h2>
-            {activity?.weeklyApplications?.length > 0 ? (
-              <ResponsiveContainer width="100%" height={200}>
-                <LineChart data={activity.weeklyApplications}>
-                  <XAxis dataKey="week" tick={{ fontSize: 11 }} tickFormatter={v => v.slice(5)} />
-                  <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                  <Tooltip labelFormatter={v => `Week of ${v}`} />
-                  <Line type="monotone" dataKey="count" stroke="#8B5CF6" strokeWidth={2.5} dot={{ fill: "#8B5CF6", r: 4 }} name="Applications" />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <EmptyChart message="No applications yet — add your first job!" />
-            )}
+        <motion.div variants={item} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-extrabold tracking-tight">Welcome back, {user?.name?.split(" ")[0]}! ✨</h1>
+            <p className="text-muted-foreground text-sm mt-1">You're on a {stats?.habitStreak ?? 0} day streak. Keep it up!</p>
           </div>
-
-          {/* Pie chart */}
-          <div className="bg-card border border-border rounded-2xl p-5">
-            <h2 className="font-semibold mb-4">Application status</h2>
-            {activity?.jobStatusBreakdown?.length > 0 ? (
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie data={activity.jobStatusBreakdown} dataKey="count" nameKey="status" cx="50%" cy="50%" outerRadius={70} label={({ status, percent }) => `${status} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
-                    {activity.jobStatusBreakdown.map((entry: any) => (
-                      <Cell key={entry.status} fill={STATUS_COLORS[entry.status] ?? "#8B5CF6"} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <EmptyChart message="Add jobs to see your status breakdown" />
-            )}
+          <div className="flex items-center gap-2">
+            <Link href="/habits">
+              <button className="px-4 py-2 rounded-2xl bg-primary text-white text-sm font-bold shadow-lg shadow-primary/25 hover:scale-[1.02] transition-all">
+                Daily Check-in
+              </button>
+            </Link>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Bottom row */}
-        <div className="grid lg:grid-cols-2 gap-6">
-          {/* Recent jobs */}
-          <div className="bg-card border border-border rounded-2xl p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold">Recent applications</h2>
-              <Link href="/jobs"><a className="text-xs text-primary flex items-center gap-1 hover:underline">View all <ArrowRight className="w-3 h-3" /></a></Link>
+        {/* Bento Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-6">
+          
+          {/* Main Habit Progress - Large Card */}
+          <motion.div variants={item} className="md:col-span-4 lg:col-span-4 glass-card rounded-[2.5rem] p-8 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-20 -mt-20 blur-3xl group-hover:bg-primary/10 transition-colors" />
+            
+            <div className="relative">
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h2 className="text-xl font-bold flex items-center gap-2">
+                    <Activity className="w-5 h-5 text-primary" /> Habit Consistency
+                  </h2>
+                  <p className="text-sm text-muted-foreground mt-1">Your activity over the last 8 weeks</p>
+                </div>
+                <Link href="/analytics" className="text-xs font-bold text-primary hover:underline">Full Report</Link>
+              </div>
+
+              <div className="h-[240px] w-full">
+                {activity?.weeklyApplications?.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={activity.weeklyApplications}>
+                      <defs>
+                        <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <XAxis dataKey="week" hide />
+                      <YAxis hide />
+                      <Tooltip 
+                        contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                        labelFormatter={v => `Week of ${v}`}
+                      />
+                      <Area type="monotone" dataKey="count" stroke="#6366f1" strokeWidth={4} fillOpacity={1} fill="url(#colorCount)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-muted-foreground italic">No data yet</div>
+                )}
+              </div>
             </div>
-            {activity?.recentJobs?.length > 0 ? (
-              <div className="space-y-3">
-                {activity.recentJobs.map((job: any) => (
-                  <div key={job.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                    <div>
-                      <p className="text-sm font-medium">{job.company}</p>
-                      <p className="text-xs text-muted-foreground">{job.role}</p>
+          </motion.div>
+
+          {/* Quick Stats Column */}
+          <div className="md:col-span-2 lg:col-span-2 grid grid-cols-1 gap-6">
+            <motion.div variants={item}>
+              <DashboardCard 
+                title="Current Streak" 
+                value={`${stats?.habitStreak ?? 0} Days`} 
+                icon={Flame} 
+                color="orange" 
+                subtitle="Best: 12 days"
+              />
+            </motion.div>
+            <motion.div variants={item}>
+              <DashboardCard 
+                title="Tasks Done" 
+                value={stats?.tasksCompleted ?? 0} 
+                icon={CheckSquare} 
+                color="green" 
+                subtitle="All time total"
+              />
+            </motion.div>
+          </div>
+
+          {/* Today's Habits - Medium Card */}
+          <motion.div variants={item} className="md:col-span-3 lg:col-span-3 glass-card rounded-[2.5rem] p-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-orange-500" /> Today's Habits
+              </h2>
+              <span className="text-xs font-bold px-3 py-1 bg-orange-100 text-orange-600 rounded-full">
+                {habits.filter(h => h.completed).length}/{habits.length} Done
+              </span>
+            </div>
+
+            <div className="space-y-4">
+              {habits.slice(0, 4).map((habit) => (
+                <div key={habit.id} className="flex items-center justify-between p-4 rounded-2xl bg-muted/30 border border-transparent hover:border-border transition-all">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${habit.completed ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30' : 'bg-background/50 border-2 border-orange-200'}`}>
+                      {habit.completed ? <Sparkles className="w-5 h-5" /> : <div className="w-2 h-2 rounded-full bg-orange-300" />}
                     </div>
-                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${statusBadge(job.status)}`}>{job.status}</span>
+                    <span className={`font-semibold ${habit.completed ? 'text-muted-foreground line-through' : ''}`}>{habit.name}</span>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground text-center py-8">No applications yet</p>
-            )}
-          </div>
-
-          {/* Today's tasks */}
-          <div className="bg-card border border-border rounded-2xl p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold">Today's tasks</h2>
-              <Link href="/tasks"><a className="text-xs text-primary flex items-center gap-1 hover:underline">View all <ArrowRight className="w-3 h-3" /></a></Link>
+                  <div className="flex items-center gap-1 text-xs font-bold text-orange-600">
+                    <Flame className="w-3 h-3" /> {habit.streak}
+                  </div>
+                </div>
+              ))}
+              {habits.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground italic">No habits added yet</div>
+              )}
+              <Link href="/habits" className="block text-center text-xs font-bold text-primary mt-4 hover:underline">Manage all habits →</Link>
             </div>
-            {stats && (
-              <div className="mb-3">
-                <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                  <span>Progress</span>
-                  <span>{stats.todayTasksDone}/{stats.todayTasksTotal}</span>
-                </div>
-                <div className="w-full bg-muted rounded-full h-2">
-                  <div className="h-2 rounded-full transition-all" style={{ width: `${stats.todayTasksTotal ? (stats.todayTasksDone / stats.todayTasksTotal) * 100 : 0}%`, background: "linear-gradient(135deg, #6366f1, #3b82f6)" }} />
-                </div>
-              </div>
-            )}
-            {activity?.todayTasks?.length > 0 ? (
-              <div className="space-y-2">
-                {activity.todayTasks.slice(0, 5).map((task: any) => (
-                  <div key={task.id} className="flex items-center gap-3 py-1.5">
-                    <button
-                      className={`w-4 h-4 rounded border-2 flex-shrink-0 flex items-center justify-center transition ${task.completed ? "" : ""}`}
-                      style={task.completed ? { background: "linear-gradient(135deg, #6366f1, #3b82f6)", borderColor: "transparent" } : { borderColor: "#a5b4fc" }}
-                    >
-                      {task.completed && <span className="text-white text-[10px]">✓</span>}
-                    </button>
-                    <span className={`text-sm ${task.completed ? "line-through text-muted-foreground" : ""}`}>{task.title}</span>
-                    <span className={`ml-auto text-xs px-2.5 py-1 rounded-full font-medium ${priorityBadge(task.priority)}`}>{task.priority}</span>
+          </motion.div>
+
+          {/* Today's Focus - Medium Card */}
+          <motion.div variants={item} className="md:col-span-3 lg:col-span-3 glass-card rounded-[2.5rem] p-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-violet-500" /> Focus Tasks
+              </h2>
+              <Link href="/tasks" className="text-xs font-bold text-primary hover:underline">View All</Link>
+            </div>
+
+            <div className="space-y-4">
+              {activity?.todayTasks?.slice(0, 3).map((task: any) => (
+                <div key={task.id} className="group flex items-center gap-4 p-4 rounded-2xl hover:bg-muted/30 transition-all">
+                  <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${task.completed ? 'bg-violet-500 border-violet-500 text-white' : 'border-violet-200 group-hover:border-violet-400'}`}>
+                    {task.completed && <CheckSquare className="w-4 h-4" />}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground text-center py-8">No tasks for today</p>
-            )}
-          </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`font-semibold truncate ${task.completed ? 'text-muted-foreground line-through' : ''}`}>{task.title}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mt-0.5">{task.priority} Priority</p>
+                  </div>
+                </div>
+              ))}
+              {(!activity?.todayTasks || activity.todayTasks.length === 0) && (
+                <div className="text-center py-8 text-muted-foreground italic">Zero tasks for today! Chill time? 🏝️</div>
+              )}
+            </div>
+          </motion.div>
+
         </div>
-      </div>
+      </motion.div>
     </DashboardLayout>
   );
-}
-
-function EmptyChart({ message }: { message: string }) {
-  return <div className="h-[200px] flex items-center justify-center text-sm text-muted-foreground">{message}</div>;
-}
-
-function getGreeting() {
-  const h = new Date().getHours();
-  if (h < 12) return "morning";
-  if (h < 17) return "afternoon";
-  return "evening";
-}
-
-function statusBadge(status: string) {
-  const map: Record<string, string> = {
-    Applied: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400",
-    Interview: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400",
-    Offer: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400",
-    Rejected: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400",
-  };
-  return map[status] ?? "bg-muted text-muted-foreground";
-}
-
-function priorityBadge(priority: string) {
-  const map: Record<string, string> = {
-    High: "bg-rose-100 text-rose-700",
-    Medium: "bg-amber-100 text-amber-700",
-    Low: "bg-emerald-100 text-emerald-700",
-  };
-  return map[priority] ?? "bg-muted text-muted-foreground";
 }
