@@ -28,7 +28,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   function handleLogout() { logout(); navigate("/"); }
 
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="min-h-screen flex bg-background overflow-hidden">
+      {/* Background Mesh Gradients for Glassmorphism */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-violet-500/10 blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-500/10 blur-[120px]" />
+        <div className="absolute top-[20%] right-[10%] w-[30%] h-[30%] rounded-full bg-pink-500/5 blur-[100px]" />
+      </div>
+
       {open && <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-20 lg:hidden" onClick={() => setOpen(false)} />}
 
       {/* ── Sidebar ── */}
@@ -124,7 +131,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </button>
         </header>
 
-        <div className="p-4 lg:p-8 max-w-6xl mx-auto">
+        <div className="p-4 lg:p-8 max-w-6xl mx-auto relative z-10">
           {children}
         </div>
 
